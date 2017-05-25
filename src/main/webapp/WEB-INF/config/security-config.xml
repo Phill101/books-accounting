@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <security:http auto-config="true" use-expressions="true">
+        <security:intercept-url pattern="/admPanel" access="hasRole('ROLE_ADMIN')"/>
+        <security:intercept-url pattern="/admPanel/**" access="hasRole('ROLE_ADMIN')"/>
+        <security:intercept-url pattern="/library" access="hasAnyRole('ROLE_ADMIN', 'ROLE_USER')"/>
+        <security:intercept-url pattern="/library/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_USER')"/>
+
+        <security:form-login login-page="/login.html"
+                             username-parameter="j_username"
+                             password-parameter="j_password"
+                             login-processing-url="/j_spring_security_check"
+                             authentication-failure-url="/login.html?error=true"/>
+
+        <security:logout logout-url="/j_spring_security_logout" logout-success-url="/"/>
+
+        <security:remember-me key="myKey" token-validity-seconds="300"/>
+
+        <security:csrf disabled="true"/>
+    </security:http>
+
+    <security:jdbc-user-service id="jdbcUserService" data-source-ref="dataSource"
+                       users-by-username-query="SELECT login, password, role_id FROM user WHERE login = ?"
+                       authorities-by-username-query="SELECT U.login, R.name FROM role R, user U WHERE U.role_id = R.id AND U.login = ?"/>
+
+    <security:authentication-manager alias="authenticationManager">
+        <security:authentication-provider user-service-ref="jdbcUserService"/>
+    </security:authentication-manager>
+</beans>
